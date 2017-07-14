@@ -1,12 +1,14 @@
 package com.jianghe.reactnative;
 
-import com.facebook.react.ReactActivity;
+import com.jianghe.preload.PreLoadReactActivity;
 
 /**
  * Created by jianghe on 2017/6/27.
  */
 
-public class RNActivity extends ReactActivity {
+public class RNActivity extends PreLoadReactActivity {
+
+//    PreLoad
 
     /**
      * 重写PreLoadReactActivity的getMainComponentName方法

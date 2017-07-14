@@ -19,6 +19,8 @@ import javax.annotation.Nullable;
 public class MainApplication extends Application implements ReactApplication {
     public static Context appContext;
     private static MainApplication instance;
+    //传递到RN页的参数
+    public static String prams = "";
 
     @Override
     public void onCreate() {

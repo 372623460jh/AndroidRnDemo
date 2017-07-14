@@ -21,11 +21,12 @@ import android.widget.TextView;
 
 import com.jianghe.androidrndemo.R;
 import com.jianghe.hotupdate.HotUpdateTools;
-import com.jianghe.reactnative.RNActivity;
 import com.jianghe.hotupdate.ReactNativeConstant;
+import com.jianghe.preload.PreLoadReactNative;
+import com.jianghe.reactnative.RNActivity;
 
 
-public class MainActivity extends Activity {
+public class HotUpdateActivity extends Activity {
 
     //DownLoadManageID
     private long mDownLoadId;
@@ -48,10 +49,12 @@ public class MainActivity extends Activity {
                 // 获取版本信息成功,需要更新
                 tv1.setText("获取最新版本信息成功" + msg.obj);
                 // 下载更新包
-                mDownLoadId = HotUpdateTools.DownLoad(MainActivity.this);
+                mDownLoadId = HotUpdateTools.DownLoad(HotUpdateActivity.this);
             } else if (msg.what == ReactNativeConstant.HAN_VERSION_GO) {
                 //获取版本信息成功,不需要更新
-                tv1.setText("获取最新版本信息成功" + msg.obj);
+                tv1.setText("获取版本信息成功" + msg.obj);
+                //预加载
+                proLoadAll();
                 // 给按钮添加事件监听
                 btn1.setOnClickListener(new MyClickListener());//添加监听
             } else if (msg.what == ReactNativeConstant.DOWNLOAD_OK) {
@@ -60,6 +63,8 @@ public class MainActivity extends Activity {
             } else if (msg.what == ReactNativeConstant.HAN_HOT_UPDATE_OK) {
                 //热更新解压合并文件成功
                 tv1.setText("热更新解压合并文件成功");
+                //预加载
+                proLoadAll();
                 // 给按钮添加事件监听
                 btn1.setOnClickListener(new MyClickListener());//添加监听
             } else if (msg.what == ReactNativeConstant.HAN_HOT_UPDATE_NO) {
@@ -93,6 +98,17 @@ public class MainActivity extends Activity {
             verifyStoragePermissions();
         } else {
             this.hotupdate();
+        }
+    }
+
+    /**
+     * 预加载所有页面的方法必须在主线中执行
+     */
+    public void proLoadAll() {
+        // 预加载
+        for (int n = 0; n < FirstActivity.regName.length; n++) {
+            System.out.println("预加载：" + FirstActivity.regName[n]);
+            PreLoadReactNative.preLoad(HotUpdateActivity.this, FirstActivity.regName[n], MainApplication.prams);
         }
     }
 
@@ -142,11 +158,11 @@ public class MainActivity extends Activity {
     //申请读写权限权限
     public void verifyStoragePermissions() {
         try {
-            int permissionW = ActivityCompat.checkSelfPermission(MainActivity.this,
+            int permissionW = ActivityCompat.checkSelfPermission(HotUpdateActivity.this,
                     Manifest.permission.WRITE_EXTERNAL_STORAGE);
             if (permissionW != PackageManager.PERMISSION_GRANTED) {
                 // 两个权限都需要申请
-                ActivityCompat.requestPermissions(MainActivity.this, new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE}, 1);
+                ActivityCompat.requestPermissions(HotUpdateActivity.this, new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE}, 1);
             } else {
                 this.hotupdate();
             }
@@ -173,8 +189,9 @@ public class MainActivity extends Activity {
             switch (v.getId()) {
                 case R.id.btn1:
                     Intent intent = new Intent();
-                    intent.setClass(MainActivity.this, RNActivity.class);
-                    MainActivity.this.startActivity(intent);//跳转到RN的activity
+                    intent.setClass(HotUpdateActivity.this, RNActivity.class);
+                    HotUpdateActivity.this.startActivity(intent);//跳转到RN的activity
+                    HotUpdateActivity.this.finish();
                     break;
                 default:
                     break;

@@ -21,7 +21,7 @@ public class ReactNativeConstant {
     /**
      * RN界面是否启动调试
      */
-    public static final boolean DEBUG = false;
+    public static final boolean DEBUG = true;
 
     /**
      * bundle文件名
@@ -85,7 +85,7 @@ public class ReactNativeConstant {
     /**
      * 增量包解压后的.pat文件
      */
-    public static final String JS_UNZIP_PATH = JS_OTHER_PATH +"/jianghe/diff.pat";
+    public static final String JS_UNZIP_PATH = JS_OTHER_PATH + "/jianghe/diff.pat";
 
     /**
      * 从服务器获取的版本信息

@@ -72,8 +72,13 @@ public class HotUpdateTools {
         // 如果bundle文件不存在或者本机版本信息是初始值
         if (!bundle.exists() || rnInfoPojo.getVersion().equals("0") || rnInfoPojo.getMd5().equals("0")) {
             //拷贝assets中的bundle到bundle的真实加载目录下
-            FileUtils.copyAssets(ReactNativeConstant.JS_BUNDLE_FILE_PATH);
-            HotUpdateTools.setNativeRNVersion(ReactNativeConstant.APK_RN_VERSION, getMd5ByFile(ReactNativeConstant.JS_BUNDLE_FILE_PATH));
+            if (FileUtils.copyAssets(ReactNativeConstant.JS_BUNDLE_FILE_PATH)) {
+                // 清空ReactInstanceManager加载新得(如果bundle文件的位置发生改变，清空才能生效)
+                MainApplication.getInstance().getReactNativeHost().clear();
+                HotUpdateTools.setNativeRNVersion(ReactNativeConstant.APK_RN_VERSION, getMd5ByFile(ReactNativeConstant.JS_BUNDLE_FILE_PATH));
+            } else {
+                //拷贝Assets文件失败
+            }
         }
 
     }
@@ -181,6 +186,8 @@ public class HotUpdateTools {
                         if (mergePatAndBundle()) {
                             //删除所有产生的中间文件（下载下来压缩包，解压后的文件夹，合并后的新文件）
                             FileUtils.deleteDir(JS_OTHER_PATH);
+                            // 清空ReactInstanceManager加载新得(如果bundle文件的位置发生改变，清空才能生效)
+                            MainApplication.getInstance().getReactNativeHost().clear();
                             //通知主线程下载解压合并校验完成，开启预加载
                             ms1.what = ReactNativeConstant.HAN_HOT_UPDATE_OK;
                             // 将新版信息写入到本地信息
