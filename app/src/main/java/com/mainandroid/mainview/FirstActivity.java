@@ -23,7 +23,7 @@ public class FirstActivity extends Activity {
     public static String[] regName = new String[]{"Hello"};
 
     Button btn1 = null;// 按钮1
-    Button btn2 = null;// 按钮1
+    Button btn2 = null;// 按钮2
     boolean hasPermissions = false;
 
     protected void onCreate(Bundle savedInstanceState) {
