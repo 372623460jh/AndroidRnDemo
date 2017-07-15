@@ -8,6 +8,7 @@ import android.net.Uri;
 import android.os.Handler;
 import android.os.Message;
 
+import com.jianghe.preload.PreLoadReactNative;
 import com.jianghe.tools.FileUtils;
 import com.jianghe.tools.HttpUtil;
 import com.mainandroid.mainview.MainApplication;
@@ -43,7 +44,6 @@ public class HotUpdateTools {
         // 从SharedPreferences中读取Rn信息
         SharedPreferences sp = MainApplication.appContext.getSharedPreferences("RNINFO", MODE_PRIVATE);
         RnInfoPojo rnInfoPojo = new RnInfoPojo();
-        rnInfoPojo.setVersion(sp.getString("RNVERSION", "0"));
         rnInfoPojo.setMd5(sp.getString("RNMD5", "0"));
         return rnInfoPojo;
     }
@@ -51,11 +51,10 @@ public class HotUpdateTools {
     /**
      * 设置本地RN信息
      */
-    public static void setNativeRNVersion(String ver, String md5) {
+    public static void setNativeRNVersion(String md5) {
         // 将Rn信息设置到SharedPreferences中
         SharedPreferences sp = MainApplication.appContext.getSharedPreferences("RNINFO", MODE_PRIVATE);
         SharedPreferences.Editor editor = sp.edit();
-        editor.putString("RNVERSION", ver);
         editor.putString("RNMD5", md5);
         editor.commit();
     }
@@ -70,15 +69,17 @@ public class HotUpdateTools {
         // 获取当前本地信息
         RnInfoPojo rnInfoPojo = HotUpdateTools.getNativeRNVersion();
         // 如果bundle文件不存在或者本机版本信息是初始值
-        if (!bundle.exists() || rnInfoPojo.getVersion().equals("0") || rnInfoPojo.getMd5().equals("0")) {
+        if (!bundle.exists()) {
             //拷贝assets中的bundle到bundle的真实加载目录下
             if (FileUtils.copyAssets(ReactNativeConstant.JS_BUNDLE_FILE_PATH)) {
-                // 清空ReactInstanceManager加载新得(如果bundle文件的位置发生改变，清空才能生效)
-                MainApplication.getInstance().getReactNativeHost().clear();
-                HotUpdateTools.setNativeRNVersion(ReactNativeConstant.APK_RN_VERSION, getMd5ByFile(ReactNativeConstant.JS_BUNDLE_FILE_PATH));
+                // 彻底清空预加载数据
+                PreLoadReactNative.clear();
+                HotUpdateTools.setNativeRNVersion(getMd5ByFile(ReactNativeConstant.JS_BUNDLE_FILE_PATH));
             } else {
                 //拷贝Assets文件失败
             }
+        } else if (rnInfoPojo.getMd5().equals("0")) {
+            HotUpdateTools.setNativeRNVersion(getMd5ByFile(ReactNativeConstant.JS_BUNDLE_FILE_PATH));
         }
 
     }
@@ -116,7 +117,7 @@ public class HotUpdateTools {
                             //和线上最新版相等
                             ms1.obj = "无需更新,加载页面";
                             //保存最新版本信息
-                            setNativeRNVersion(VERSION_INFO.getString("version"), VERSION_INFO.getString("bundleMd5"));
+                            setNativeRNVersion(VERSION_INFO.getString("bundleMd5"));
                             myHandler.sendMessage(ms1);
                         }
                     } else {
@@ -186,12 +187,12 @@ public class HotUpdateTools {
                         if (mergePatAndBundle()) {
                             //删除所有产生的中间文件（下载下来压缩包，解压后的文件夹，合并后的新文件）
                             FileUtils.deleteDir(JS_OTHER_PATH);
-                            // 清空ReactInstanceManager加载新得(如果bundle文件的位置发生改变，清空才能生效)
-                            MainApplication.getInstance().getReactNativeHost().clear();
+                            // 彻底清空预加载数据
+                            PreLoadReactNative.clear();
                             //通知主线程下载解压合并校验完成，开启预加载
                             ms1.what = ReactNativeConstant.HAN_HOT_UPDATE_OK;
                             // 将新版信息写入到本地信息
-                            setNativeRNVersion(VERSION_INFO.getString("version"), VERSION_INFO.getString("bundleMd5"));
+                            setNativeRNVersion(VERSION_INFO.getString("bundleMd5"));
                         } else {
                             //通知主线程下载解压合并校验完成，开启预加载
                             ms1.what = ReactNativeConstant.HAN_HOT_UPDATE_NO;

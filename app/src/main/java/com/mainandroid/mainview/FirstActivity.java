@@ -24,40 +24,60 @@ public class FirstActivity extends Activity {
 
     Button btn1 = null;// 按钮1
     Button btn2 = null;// 按钮1
+    boolean hasPermissions = false;
 
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_firstactivity);
-        //申请存储权限
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            verifyStoragePermissions();
-        } else {
-            this.init();
-        }
+        //申请读写权限
+        this.verifyStoragePermissions();
+    }
+
+    /**
+     * 真是的首次执行方法
+     * onCreate方法中只是用来申请权限，当权限申请成功后才会执行本方法
+     */
+    protected void onCreateTrue() {
+        this.hasPermissions = true;
+        this.init();
+        this.proload();
     }
 
     /**
      * 当每次进入页面的时候从新预加载RN页面
+     * 预加载时需要文件读写权限，加载读写权限需要悬浮窗权限
      */
     protected void onStart() {
+        if (this.hasPermissions) {
+            // 如果有权限才预加载
+            this.proload();
+        }
+        super.onStart();
+    }
+
+    /**
+     * 预加载方法
+     */
+    public void proload() {
         // 预加载
         for (int n = 0; n < FirstActivity.regName.length; n++) {
             System.out.println("预加载：" + FirstActivity.regName[n]);
             PreLoadReactNative.preLoad(FirstActivity.this, FirstActivity.regName[n], MainApplication.prams);
         }
-        super.onStart();
     }
 
-    //申请读写权限权限
+    //申请读写权限
     public void verifyStoragePermissions() {
         try {
-            int permissionW = ActivityCompat.checkSelfPermission(FirstActivity.this,
-                    Manifest.permission.WRITE_EXTERNAL_STORAGE);
-            if (permissionW != PackageManager.PERMISSION_GRANTED) {
-                // 两个权限都需要申请
-                ActivityCompat.requestPermissions(FirstActivity.this, new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE}, 1);
-            } else {
-                this.init();
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                int permissionW = ActivityCompat.checkSelfPermission(FirstActivity.this,
+                        Manifest.permission.WRITE_EXTERNAL_STORAGE);
+                if (permissionW != PackageManager.PERMISSION_GRANTED) {
+                    // 两个权限都需要申请
+                    ActivityCompat.requestPermissions(FirstActivity.this, new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE}, 1);
+                } else {
+                    this.onCreateTrue();
+                }
             }
         } catch (Exception e) {
             e.printStackTrace();
@@ -70,7 +90,7 @@ public class FirstActivity extends Activity {
         switch (requestCode) {
             case 1://写权限
                 if (grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                    this.init();
+                    this.onCreateTrue();
                     break;
                 }
         }

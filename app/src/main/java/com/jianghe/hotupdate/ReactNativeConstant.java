@@ -14,11 +14,6 @@ import java.io.File;
 public class ReactNativeConstant {
 
     /**
-     * RNbundle初始APK中的版本号每次打包需要更新
-     */
-    public static final String APK_RN_VERSION = "1";
-
-    /**
      * RN界面是否启动调试
      */
     public static final boolean DEBUG = true;
@@ -36,7 +31,7 @@ public class ReactNativeConstant {
     /**
      * 获取版本号的URL
      */
-    public static final String VERSION_URL = "http://192.168.18.77:3000/getRnVersion";
+    public static final String VERSION_URL = "http://192.168.0.106:3000/getRnVersion";
 
     /**
      * handle中标志

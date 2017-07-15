@@ -9,7 +9,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_gravity="center_horizontal"
-        android:text="第一个Android原生"
+        android:text="RN应用外的安卓原生页面"
         android:textSize="40sp"></TextView>
 
     <Button

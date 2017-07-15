@@ -24,6 +24,13 @@ public class PreLoadReactNative {
 
     private static final Map<String, ReactRootView> CACHE = new HashMap<>();
 
+    //彻底清除预加载的数据
+    public static void clear() {
+        // 清空ReactInstanceManager加载新得(如果bundle文件的位置发生改变，清空才能生效
+        MainApplication.getInstance().getReactNativeHost().clear();
+        PreLoadReactNative.CACHE.clear();
+    }
+
     /**
      * 初始化ReactRootView，并添加到缓存
      *
@@ -34,7 +41,11 @@ public class PreLoadReactNative {
     public static void preLoad(Activity activity, String componentName, String prams) {
 
         //当基础页重新获取焦点时移除rnrootview
-        PreLoadReactNative.deatchView(componentName);
+        if (CACHE.get(componentName) != null) {
+            //如果缓存中有该页面先移除页面中的RN页
+            PreLoadReactNative.deatchView(componentName);
+            return;
+        }
         // 1.创建ReactRootView（使用MainApplication中创建的RNhost对象）
         ReactRootView rootView = new ReactRootView(activity);
         rootView.startReactApplication(
@@ -73,9 +84,9 @@ public class PreLoadReactNative {
             if (parent != null) {
                 parent.removeView(rootView);
             }
-            if (CACHE.get(component) != null) {
-                CACHE.remove(component);
-            }
+//            if (CACHE.get(component) != null) {
+//                CACHE.remove(component);
+//            }
         } catch (Throwable e) {
         }
     }

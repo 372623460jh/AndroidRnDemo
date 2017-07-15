@@ -5,19 +5,10 @@ package com.jianghe.hotupdate;
  */
 
 public class RnInfoPojo {
-    private String version;
     private String md5;
-
-    public String getVersion() {
-        return version;
-    }
 
     public String getMd5() {
         return md5;
-    }
-
-    public void setVersion(String version) {
-        this.version = version;
     }
 
     public void setMd5(String md5) {
