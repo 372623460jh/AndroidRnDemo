@@ -31,7 +31,7 @@ public class ReactNativeConstant {
     /**
      * 获取版本号的URL
      */
-    public static final String VERSION_URL = "http://192.168.0.106:3000/getRnVersion";
+    public static final String VERSION_URL = "http://192.168.18.77:3000/getRnVersion";
 
     /**
      * handle中标志
@@ -45,6 +45,9 @@ public class ReactNativeConstant {
 
     public static final int HAN_HOT_UPDATE_OK = 7; //热更新解压合并文件成功
     public static final int HAN_HOT_UPDATE_NO = 8; //热更新解压合并文件失败
+
+    public static final int DOWN_LOAD_PROGRESS = 9; //下载进度
+    public static final int CLEAR_PROLOAD = 10; //下载进度
 
     /**
      * SDcard中应用对应的文件夹跟目录

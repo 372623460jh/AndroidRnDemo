@@ -2,11 +2,7 @@ package com.mainandroid.mainview;
 
 import android.Manifest;
 import android.app.Activity;
-import android.app.DownloadManager;
-import android.content.BroadcastReceiver;
-import android.content.Context;
 import android.content.Intent;
-import android.content.IntentFilter;
 import android.content.pm.PackageManager;
 import android.os.Build;
 import android.os.Bundle;
@@ -24,15 +20,22 @@ import com.jianghe.hotupdate.HotUpdateTools;
 import com.jianghe.hotupdate.ReactNativeConstant;
 import com.jianghe.preload.PreLoadReactNative;
 import com.jianghe.reactnative.RNActivity;
+import com.jianghe.hotupdate.CallBack;
+import com.jianghe.hotupdate.CallBackMess;
 
 
 public class HotUpdateActivity extends Activity {
 
-    //DownLoadManageID
-    private long mDownLoadId;
-    //下载完成的广播对象
-    private CompleteReceiver localReceiver;
     MyHandler myHandler;
+    //热更新回调方法
+    private CallBack callBack;
+    //热更新工具类
+    private HotUpdateTools hut;
+
+    //下载总长多
+    public int allLength = 0;
+    //已下载长度
+    public int Lengthed = 0;
 
     Button btn1 = null;// 按钮1
     TextView tv1 = null;// 提示
@@ -48,8 +51,6 @@ public class HotUpdateActivity extends Activity {
             if (msg.what == ReactNativeConstant.HAN_VERSION_OK) {
                 // 获取版本信息成功,需要更新
                 tv1.setText("获取最新版本信息成功" + msg.obj);
-                // 下载更新包
-                mDownLoadId = HotUpdateTools.DownLoad(HotUpdateActivity.this);
             } else if (msg.what == ReactNativeConstant.HAN_VERSION_GO) {
                 //获取版本信息成功,不需要更新
                 tv1.setText("获取版本信息成功" + msg.obj);
@@ -70,7 +71,9 @@ public class HotUpdateActivity extends Activity {
             } else if (msg.what == ReactNativeConstant.HAN_HOT_UPDATE_NO) {
                 //热更新解压合并文件失败
                 tv1.setText("热更新解压合并文件失败");
-                //全量更新
+            } else if (msg.what == ReactNativeConstant.DOWN_LOAD_PROGRESS) {
+                //下载进度
+                tv1.setText("下载进度：" + msg.obj);
             } else if (msg.what == ReactNativeConstant.HAN_ERROR) {
                 //出错
                 tv1.setText("出错");
@@ -89,15 +92,61 @@ public class HotUpdateActivity extends Activity {
         // 获取按钮
         btn1 = (Button) findViewById(R.id.btn1);
         tv1 = (TextView) findViewById(R.id.tv1);
-        myHandler = new MyHandler();
-        //注册下载通知广播
-        registeReceiver();
-        // 申请读写权限
-        //申请存储权限
+        this.myHandler = new MyHandler();
+        this.callBack = new CallBack(myHandler) {
+            @Override
+            public void handleMessage(CallBackMess data) {
+                Message ms1 = new Message();
+                ms1.what = data.getMessTag();
+                switch (data.getMessTag()) {
+                    case ReactNativeConstant.HAN_ERROR:
+                        // 出错
+                        ms1.obj = data.getStrMess();
+                        this.mHandler.sendMessage(ms1);
+                        break;
+                    case ReactNativeConstant.DOWNLOAD_OK:
+                        // 下载完成
+                        ms1.obj = data.getStrMess();
+                        this.mHandler.sendMessage(ms1);
+                        break;
+                    case ReactNativeConstant.HAN_VERSION_OK:
+                        // 获取版本成功需更新
+                        ms1.obj = data.getStrMess();
+                        this.mHandler.sendMessage(ms1);
+                        break;
+                    case ReactNativeConstant.HAN_VERSION_GO:
+                        // 获取版本成功不更新
+                        ms1.obj = data.getStrMess();
+                        this.mHandler.sendMessage(ms1);
+                        break;
+                    case ReactNativeConstant.HAN_HOT_UPDATE_OK:
+                        // 热更新解压合并文件成功
+                        ms1.obj = data.getStrMess();
+                        this.mHandler.sendMessage(ms1);
+                        break;
+                    case ReactNativeConstant.HAN_HOT_UPDATE_NO:
+                        // 热更新解压合并文件失败
+                        ms1.obj = data.getStrMess();
+                        this.mHandler.sendMessage(ms1);
+                        break;
+                    case ReactNativeConstant.DOWN_LOAD_PROGRESS:
+                        //下载进度
+                        if (allLength == 0) {
+                            allLength = Integer.parseInt(data.getStrMess());
+                        }
+                        Lengthed += data.getIntMess();
+                        ms1.obj = Lengthed + "/" + allLength;
+                        this.mHandler.sendMessage(ms1);
+                        break;
+                }
+            }
+        };
+        this.hut = new HotUpdateTools(this.callBack);
+        // 申请存储权限
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             verifyStoragePermissions();
         } else {
-            this.hotupdate();
+            this.hut.hotUpdate();
         }
     }
 
@@ -112,49 +161,6 @@ public class HotUpdateActivity extends Activity {
         }
     }
 
-    /**
-     * 热更新的方法
-     */
-    public void hotupdate() {
-        // 初始化bundle
-        HotUpdateTools.initBundle();
-        // 获取版本
-        HotUpdateTools.getVersion(ReactNativeConstant.VERSION_URL, myHandler);
-    }
-
-    /**
-     * 注册下载完成通知广播
-     */
-    private void registeReceiver() {
-        if (localReceiver != null) {
-            unregisterReceiver(localReceiver);
-            localReceiver = null;
-        }
-        localReceiver = new CompleteReceiver();
-        //注册广播
-        registerReceiver(localReceiver, new IntentFilter(DownloadManager.ACTION_DOWNLOAD_COMPLETE));
-    }
-
-    /**
-     * 自定义广播类
-     */
-    public class CompleteReceiver extends BroadcastReceiver {
-        @Override
-        public void onReceive(Context context, Intent intent) {
-            long completeId = intent.getLongExtra(DownloadManager.EXTRA_DOWNLOAD_ID, 0);
-            //下载完成
-            if (completeId == mDownLoadId) {
-                System.out.println("下载完成" + completeId);
-                //发消息给handler下载完成
-                Message ms1 = new Message();
-                ms1.what = ReactNativeConstant.DOWNLOAD_OK;
-                myHandler.sendMessage(ms1);
-                // 下载完成调用处理压缩文件类
-                HotUpdateTools.handleZIP(myHandler);
-            }
-        }
-    }
-
     //申请读写权限权限
     public void verifyStoragePermissions() {
         try {
@@ -164,7 +170,7 @@ public class HotUpdateActivity extends Activity {
                 // 两个权限都需要申请
                 ActivityCompat.requestPermissions(HotUpdateActivity.this, new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE}, 1);
             } else {
-                this.hotupdate();
+                this.hut.hotUpdate();
             }
         } catch (Exception e) {
             e.printStackTrace();
@@ -177,7 +183,7 @@ public class HotUpdateActivity extends Activity {
         switch (requestCode) {
             case 1://写权限
                 if (grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                    this.hotupdate();
+                    this.hut.hotUpdate();
                     break;
                 }
         }

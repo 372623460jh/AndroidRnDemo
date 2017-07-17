@@ -25,6 +25,7 @@ public class FirstActivity extends Activity {
     Button btn1 = null;// 按钮1
     Button btn2 = null;// 按钮2
     boolean hasPermissions = false;
+    boolean first = true;
 
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -48,9 +49,12 @@ public class FirstActivity extends Activity {
      * 预加载时需要文件读写权限，加载读写权限需要悬浮窗权限
      */
     protected void onStart() {
-        if (this.hasPermissions) {
+        if (this.hasPermissions && this.first == false) {
             // 如果有权限才预加载
             this.proload();
+        }
+        if(this.first == true){
+            this.first = false;
         }
         super.onStart();
     }

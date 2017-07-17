@@ -8,8 +8,6 @@ import com.jianghe.preload.PreLoadReactActivity;
 
 public class RNActivity extends PreLoadReactActivity {
 
-//    PreLoad
-
     /**
      * 重写PreLoadReactActivity的getMainComponentName方法
      */

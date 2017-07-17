@@ -22,13 +22,16 @@ import java.util.Map;
  */
 public class PreLoadReactNative {
 
-    private static final Map<String, ReactRootView> CACHE = new HashMap<>();
+    private static final Map<String, ReactRootView> ReactRootViewCache = new HashMap<>();
 
-    //彻底清除预加载的数据
+    /**
+     * 彻底清除预加载的数据
+     */
     public static void clear() {
         // 清空ReactInstanceManager加载新得(如果bundle文件的位置发生改变，清空才能生效
         MainApplication.getInstance().getReactNativeHost().clear();
-        PreLoadReactNative.CACHE.clear();
+        // 清除预加载缓存类中的数据
+        PreLoadReactNative.ReactRootViewCache.clear();
     }
 
     /**
@@ -41,7 +44,7 @@ public class PreLoadReactNative {
     public static void preLoad(Activity activity, String componentName, String prams) {
 
         //当基础页重新获取焦点时移除rnrootview
-        if (CACHE.get(componentName) != null) {
+        if (ReactRootViewCache.get(componentName) != null) {
             //如果缓存中有该页面先移除页面中的RN页
             PreLoadReactNative.deatchView(componentName);
             return;
@@ -53,9 +56,15 @@ public class PreLoadReactNative {
                 componentName,
                 PreLoadReactNative.getLaunchOptions(prams));
         // 2.添加到缓存
-        CACHE.put(componentName, rootView);
+        ReactRootViewCache.put(componentName, rootView);
     }
 
+    /**
+     * 预加载时给RN页面传参
+     *
+     * @param prams
+     * @return
+     */
     static Bundle getLaunchOptions(String prams) {
         Bundle bundle = new Bundle();
         bundle.putString("bundle", prams);
@@ -69,25 +78,23 @@ public class PreLoadReactNative {
      * @return
      */
     public static ReactRootView getReactRootView(String componentName) {
-        return CACHE.get(componentName);
+        return ReactRootViewCache.get(componentName);
     }
 
     /**
-     * 从当前界面移除 ReactRootView
+     * 从当前界面移除 ReactRootView(当RN页面返回至native页面时需要调用此方法)
      *
      * @param component
      */
     public static void deatchView(String component) {
         try {
-            ReactRootView rootView = getReactRootView(component);
+            ReactRootView rootView = PreLoadReactNative.getReactRootView(component);
             ViewGroup parent = (ViewGroup) rootView.getParent();
             if (parent != null) {
                 parent.removeView(rootView);
             }
-//            if (CACHE.get(component) != null) {
-//                CACHE.remove(component);
-//            }
         } catch (Throwable e) {
+            e.printStackTrace();
         }
     }
 }

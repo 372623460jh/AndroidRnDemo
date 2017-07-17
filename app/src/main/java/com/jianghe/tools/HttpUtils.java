@@ -23,7 +23,7 @@ import java.util.Map;
  * Created by jianghe on 2017/6/28.
  */
 
-public class HttpUtil {
+public class HttpUtils {
 
     // 创建HttpClient对象
     public static HttpClient httpClient = new DefaultHttpClient();
