@@ -12,6 +12,7 @@ import com.facebook.react.ReactRootView;
 import com.mainandroid.mainview.MainApplication;
 
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.Map;
 
 
@@ -25,7 +26,24 @@ public class PreLoadReactNative {
     private static final Map<String, ReactRootView> ReactRootViewCache = new HashMap<>();
 
     /**
-     * 彻底清除预加载的数据
+     * 预加载方法（该方法只能在主线程中执行）
+     * 注意：如果需要在原生和RN见传参需要在预加载之前就将传递参数准备到MainApplication.prams中
+     */
+    public static void proload(Activity activity) {
+
+        // 预加载
+        Iterator iter = MainApplication.RNMAP.entrySet().iterator();
+        while (iter.hasNext()) {
+            Map.Entry entry = (Map.Entry) iter.next();
+            //获取key值
+            String key = (String) entry.getKey();
+            System.out.println("预加载：" + key);
+            PreLoadReactNative.preLoad(activity, key, MainApplication.prams);
+        }
+    }
+
+    /**
+     * 彻底清除预加载的数据（该方法只能在主线程中执行）
      */
     public static void clear() {
         // 清空ReactInstanceManager加载新得(如果bundle文件的位置发生改变，清空才能生效

@@ -1,6 +1,5 @@
 package com.jianghe.hotupdate;
 
-import com.jianghe.preload.PreLoadReactNative;
 import com.jianghe.tools.DownLoadUtils;
 import com.jianghe.tools.FileUtils;
 import com.jianghe.tools.HttpUtils;
@@ -41,8 +40,6 @@ public class HotUpdateTools {
      * 暴露的热更新方法
      */
     public void hotUpdate() {
-        // 彻底清空预加载数据
-        PreLoadReactNative.clear();
         this.T = new Thread(new Runnable() {
             public void run() {
                 //初始化bundle文件
@@ -63,7 +60,10 @@ public class HotUpdateTools {
         if (!bundle.exists()) {
             //拷贝assets中的bundle到bundle的真实加载目录下
             if (FileUtils.copyAssets(ReactNativeConstant.JS_BUNDLE_FILE_PATH)) {
-
+                //拷贝Assets文件成功
+                CallBackMess ms1 = new CallBackMess();
+                ms1.setMessTag(ReactNativeConstant.COPY_BUNDLE_SUCC);
+                callBack.handleMessage(ms1);
             } else {
                 //拷贝Assets文件失败
                 CallBackMess ms1 = new CallBackMess();

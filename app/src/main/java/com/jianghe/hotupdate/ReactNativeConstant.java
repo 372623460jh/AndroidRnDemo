@@ -16,7 +16,7 @@ public class ReactNativeConstant {
     /**
      * RN界面是否启动调试
      */
-    public static final boolean DEBUG = true;
+    public static final boolean DEBUG = false;
 
     /**
      * bundle文件名
@@ -38,6 +38,8 @@ public class ReactNativeConstant {
      */
     public static final int HAN_ERROR = 1; //出错
 
+    public static final int COPY_BUNDLE_SUCC = 2; //拷贝bundle文件到SD卡成功
+
     public static final int DOWNLOAD_OK = 4; //下载完成
 
     public static final int HAN_VERSION_OK = 5; //获取版本成功需更新
@@ -47,7 +49,6 @@ public class ReactNativeConstant {
     public static final int HAN_HOT_UPDATE_NO = 8; //热更新解压合并文件失败
 
     public static final int DOWN_LOAD_PROGRESS = 9; //下载进度
-    public static final int CLEAR_PROLOAD = 10; //下载进度
 
     /**
      * SDcard中应用对应的文件夹跟目录

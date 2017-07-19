@@ -5,7 +5,9 @@ import {
   AppRegistry,
   StyleSheet,
   Text,
-  View
+  View,
+  TouchableNativeFeedback,
+  NativeModules,
 } from 'react-native';
 
 if (!__DEV__) {
@@ -27,18 +29,20 @@ class Hello extends Component {
   render() {
     return (
       <View style={styles.container}>
-        <Text style={styles.welcome}>
-          Welcome to React Native!
-        </Text>
-        <Text style={styles.instructions}>
-          To get started, edit index.android.js
-        </Text>
-        <Text style={styles.instructions}>
-          Double tap R on your keyboard to reload,{'\n'}
-          Shake or press menu button for dev menu
-        </Text>
+         <Text style={{margin: 30}}>我是更新后的页面</Text>
+         <TouchableNativeFeedback
+              onPress={this._onPressButton}
+              background={TouchableNativeFeedback.SelectableBackground()}>
+            <View style={{width: 150, height: 100, backgroundColor: 'blue'}}>
+              <Text style={{margin: 30}}>我是更新后的按钮</Text>
+            </View>
+          </TouchableNativeFeedback>
       </View>
     );
+  }
+
+  _onPressButton(){
+      NativeModules.CommonModule.hotUpdate("Hello");
   }
 }
 

@@ -13,14 +13,13 @@ import android.widget.Button;
 
 import com.jianghe.androidrndemo.R;
 import com.jianghe.preload.PreLoadReactNative;
-import com.jianghe.reactnative.RNActivity;
+import com.jianghe.reactnative.HotUpdateActivity;
 
 /**
  * Created by jianghe on 2017/7/14.
  */
 
 public class FirstActivity extends Activity {
-    public static String[] regName = new String[]{"Hello"};
 
     Button btn1 = null;// 按钮1
     Button btn2 = null;// 按钮2
@@ -35,13 +34,13 @@ public class FirstActivity extends Activity {
     }
 
     /**
-     * 真是的首次执行方法
+     * 首次执行方法
      * onCreate方法中只是用来申请权限，当权限申请成功后才会执行本方法
      */
     protected void onCreateTrue() {
         this.hasPermissions = true;
         this.init();
-        this.proload();
+        PreLoadReactNative.proload(FirstActivity.this);
     }
 
     /**
@@ -51,23 +50,12 @@ public class FirstActivity extends Activity {
     protected void onStart() {
         if (this.hasPermissions && this.first == false) {
             // 如果有权限才预加载
-            this.proload();
+            PreLoadReactNative.proload(FirstActivity.this);
         }
-        if(this.first == true){
+        if (this.first == true) {
             this.first = false;
         }
         super.onStart();
-    }
-
-    /**
-     * 预加载方法
-     */
-    public void proload() {
-        // 预加载
-        for (int n = 0; n < FirstActivity.regName.length; n++) {
-            System.out.println("预加载：" + FirstActivity.regName[n]);
-            PreLoadReactNative.preLoad(FirstActivity.this, FirstActivity.regName[n], MainApplication.prams);
-        }
     }
 
     //申请读写权限
@@ -115,11 +103,13 @@ public class FirstActivity extends Activity {
             Intent intent = new Intent();
             switch (v.getId()) {
                 case R.id.btn1:
-                    intent.setClass(FirstActivity.this, RNActivity.class);
+                    intent.setClass(FirstActivity.this, MainApplication.RNMAP.get("Hello"));
                     FirstActivity.this.startActivity(intent);//跳转到RN的activity
                     break;
                 case R.id.btn2:
                     intent.setClass(FirstActivity.this, HotUpdateActivity.class);
+                    intent.putExtra("Name", "Hello");
+                    intent.putExtra("Source", "0");
                     FirstActivity.this.startActivity(intent);//跳转到热更新的activity
                     break;
                 default:

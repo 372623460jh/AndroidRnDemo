@@ -1,4 +1,4 @@
-package com.mainandroid.mainview;
+package com.jianghe.reactnative;
 
 import android.Manifest;
 import android.app.Activity;
@@ -12,16 +12,16 @@ import android.support.annotation.NonNull;
 import android.support.v4.app.ActivityCompat;
 import android.view.View;
 import android.view.View.OnClickListener;
-import android.widget.Button;
 import android.widget.TextView;
 
 import com.jianghe.androidrndemo.R;
+import com.jianghe.hotupdate.CallBack;
+import com.jianghe.hotupdate.CallBackMess;
 import com.jianghe.hotupdate.HotUpdateTools;
 import com.jianghe.hotupdate.ReactNativeConstant;
 import com.jianghe.preload.PreLoadReactNative;
-import com.jianghe.reactnative.RNActivity;
-import com.jianghe.hotupdate.CallBack;
-import com.jianghe.hotupdate.CallBackMess;
+import com.mainandroid.mainview.MainApplication;
+import com.mainandroid.mainview.RNActivity;
 
 
 public class HotUpdateActivity extends Activity {
@@ -32,13 +32,21 @@ public class HotUpdateActivity extends Activity {
     //热更新工具类
     private HotUpdateTools hut;
 
+    //热更新后将要跳转的页面
+    private String willGoto;
+    //来源（0安卓原生,1RN页）
+    private String source;
+    //标志（0无需更新 1需更新）
+    private int tip;
+
     //下载总长多
     public int allLength = 0;
     //已下载长度
     public int Lengthed = 0;
 
-    Button btn1 = null;// 按钮1
     TextView tv1 = null;// 提示
+    TextView tv2 = null;// 下载进度
+    TextView tv3 = null;// 确认按钮
 
     // Handler
     class MyHandler extends Handler {
@@ -50,30 +58,36 @@ public class HotUpdateActivity extends Activity {
             super.handleMessage(msg);
             if (msg.what == ReactNativeConstant.HAN_VERSION_OK) {
                 // 获取版本信息成功,需要更新
-                tv1.setText("获取最新版本信息成功" + msg.obj);
+                tv1.setText("开始下载更新包");
             } else if (msg.what == ReactNativeConstant.HAN_VERSION_GO) {
                 //获取版本信息成功,不需要更新
-                tv1.setText("获取版本信息成功" + msg.obj);
-                //预加载
-                proLoadAll();
-                // 给按钮添加事件监听
-                btn1.setOnClickListener(new MyClickListener());//添加监听
+                tv1.setText("已是最新版本1");
+                tip = 0;
+                tv3.setVisibility(View.VISIBLE);
             } else if (msg.what == ReactNativeConstant.DOWNLOAD_OK) {
                 //下载新版本更新包成功
-                tv1.setText("下载更新包成功");
+                tv1.setText("下载更新包成功！");
             } else if (msg.what == ReactNativeConstant.HAN_HOT_UPDATE_OK) {
                 //热更新解压合并文件成功
-                tv1.setText("热更新解压合并文件成功");
-                //预加载
-                proLoadAll();
-                // 给按钮添加事件监听
-                btn1.setOnClickListener(new MyClickListener());//添加监听
+                tv1.setText("增量热更新成功");
+                // 彻底清空预加载数据
+                PreLoadReactNative.clear();
+                // 预加载
+                PreLoadReactNative.proload(HotUpdateActivity.this);
+                // 跳转到下一个页面
+                tip = 1;
+                tv3.setVisibility(View.VISIBLE);
             } else if (msg.what == ReactNativeConstant.HAN_HOT_UPDATE_NO) {
                 //热更新解压合并文件失败
                 tv1.setText("热更新解压合并文件失败");
             } else if (msg.what == ReactNativeConstant.DOWN_LOAD_PROGRESS) {
                 //下载进度
-                tv1.setText("下载进度：" + msg.obj);
+                tv2.setText("下载进度：" + msg.obj);
+            } else if (msg.what == ReactNativeConstant.COPY_BUNDLE_SUCC) {
+                //拷贝bundle文件到SD卡成功
+                tv1.setText("拷贝bundle文件到SD卡成功");
+                // 彻底清空预加载数据
+                PreLoadReactNative.clear();
             } else if (msg.what == ReactNativeConstant.HAN_ERROR) {
                 //出错
                 tv1.setText("出错");
@@ -83,15 +97,41 @@ public class HotUpdateActivity extends Activity {
 
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_astest);
+        setContentView(R.layout.activity_hotupdate);
         this.init();
     }
 
     //初始化方法
     private void init() {
         // 获取按钮
-        btn1 = (Button) findViewById(R.id.btn1);
         tv1 = (TextView) findViewById(R.id.tv1);
+        tv2 = (TextView) findViewById(R.id.tv2);
+        tv3 = (TextView) findViewById(R.id.tv3);
+        tv3.setVisibility(View.INVISIBLE);
+        //tv3的点击事件
+        tv3.setOnClickListener(new OnClickListener() {
+            @Override
+            public void onClick(View arg0) {
+                if(source.equals("0")){
+                    if(tip == 0){
+                        gotoRnPage();
+                    }else{
+                        gotoRnPage();
+                    }
+                }else{
+                    if(tip == 0){
+                        removePage();
+                    }else{
+                        RNActivity.mainActivity.finish();
+                        gotoRnPage();
+                    }
+                }
+            }
+        });
+        // 获取传参
+        this.willGoto = this.getIntent().getExtras().getString("Name");
+        // 来源
+        this.source = this.getIntent().getExtras().getString("Source");
         this.myHandler = new MyHandler();
         this.callBack = new CallBack(myHandler) {
             @Override
@@ -102,6 +142,10 @@ public class HotUpdateActivity extends Activity {
                     case ReactNativeConstant.HAN_ERROR:
                         // 出错
                         ms1.obj = data.getStrMess();
+                        this.mHandler.sendMessage(ms1);
+                        break;
+                    case ReactNativeConstant.COPY_BUNDLE_SUCC:
+                        // 拷贝bundle文件到sd卡成功
                         this.mHandler.sendMessage(ms1);
                         break;
                     case ReactNativeConstant.DOWNLOAD_OK:
@@ -135,7 +179,7 @@ public class HotUpdateActivity extends Activity {
                             allLength = Integer.parseInt(data.getStrMess());
                         }
                         Lengthed += data.getIntMess();
-                        ms1.obj = Lengthed + "/" + allLength;
+                        ms1.obj = Lengthed + "B/" + allLength + "B";
                         this.mHandler.sendMessage(ms1);
                         break;
                 }
@@ -150,15 +194,18 @@ public class HotUpdateActivity extends Activity {
         }
     }
 
-    /**
-     * 预加载所有页面的方法必须在主线中执行
-     */
-    public void proLoadAll() {
-        // 预加载
-        for (int n = 0; n < FirstActivity.regName.length; n++) {
-            System.out.println("预加载：" + FirstActivity.regName[n]);
-            PreLoadReactNative.preLoad(HotUpdateActivity.this, FirstActivity.regName[n], MainApplication.prams);
-        }
+
+    //跳转到下一个页面的方法
+    private void gotoRnPage() {
+        Intent intent = new Intent();
+        intent.setClass(HotUpdateActivity.this, MainApplication.RNMAP.get(this.willGoto));
+        HotUpdateActivity.this.startActivity(intent);//跳转到RN的activity
+        HotUpdateActivity.this.finish();
+    }
+
+    // 移除模拟模态框
+    private void removePage() {
+        HotUpdateActivity.this.finish();
     }
 
     //申请读写权限权限
@@ -186,22 +233,6 @@ public class HotUpdateActivity extends Activity {
                     this.hut.hotUpdate();
                     break;
                 }
-        }
-    }
-
-    //事件处理内部类
-    class MyClickListener implements OnClickListener {
-        public void onClick(View v) {
-            switch (v.getId()) {
-                case R.id.btn1:
-                    Intent intent = new Intent();
-                    intent.setClass(HotUpdateActivity.this, RNActivity.class);
-                    HotUpdateActivity.this.startActivity(intent);//跳转到RN的activity
-                    HotUpdateActivity.this.finish();
-                    break;
-                default:
-                    break;
-            }
         }
     }
 }
